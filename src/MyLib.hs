@@ -1,6 +1,10 @@
 {-# LANGUAGE LambdaCase, ScopedTypeVariables, TypeApplications #-}
-module MyLib (eval) where
+module MyLib
+  ( module MyLib
+  )
+where
 
+import Control.Monad (forM)
 import Data.Typeable (Typeable)
 import qualified Language.Haskell.Interpreter as Hint
 
@@ -24,4 +28,16 @@ eval s = do
     Hint.interpret s (Hint.as :: t)
   case res of
     Left err -> error ("error: " <> show err)
+    Right val -> pure val
+
+loadFoo :: IO [(Hint.ModuleName, [Hint.ModuleElem])]
+loadFoo = do
+  res <- Hint.runInterpreter $ do
+    Hint.loadModules ["Foo.hs"]
+    mods <- Hint.getLoadedModules
+    forM mods $ \nm -> do
+      mes <- Hint.getModuleExports nm
+      pure (nm, mes)
+  case res of
+    Left err -> putStrLn "failed" >> pure []
     Right val -> pure val
