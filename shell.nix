@@ -7,7 +7,11 @@ in
 
 pkgs.mkShell {
   buildInputs = with pkgs; [
-    ghc
+    # haskell
     cabal-install
+    ghc
+
+    # docker containers
+    podman
   ];
 }
