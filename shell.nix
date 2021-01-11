@@ -12,6 +12,8 @@ pkgs.mkShell {
     ghc
 
     # docker containers
+    conmon
     podman
+    runc
   ];
 }
