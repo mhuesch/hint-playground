@@ -1,0 +1,70 @@
+== (trying to) build with Asterius
+
+you will likely have to put something into `policy.json` to allow the usage of certain docker registries.
+this means something like this in `$HOME/.config/containers/policy.json`:
+
+[source]
+----
+{
+    "default": [{"type": "reject"}],
+    "transports": {
+        "docker": {
+          "docker.io/terrorjack": [{"type": "insecureAcceptAnything"}]
+        },
+        "dir": {
+            "": [{"type": "insecureAcceptAnything"}]
+        }
+    }
+}
+----
+
+next:
+
+[source]
+----
+podman pull docker.io/terrorjack/asterius
+podman run -it --rm -v $(pwd):/workspace -w /workspace --network host terrorjack/asterius
+----
+
+this should drop you into a shell inside of the running container.
+it _should_ have network access (due to `--network host`).
+
+inside here, run:
+
+[source]
+----
+ahc-cabal v2-update
+ahc-cabal v2-build
+----
+
+when I run this, I see:
+
+[source]
+----
+root@vayu:/workspace# ahc-cabal v2-build
+Resolving dependencies...
+cabal: Could not resolve dependencies:
+[__0] trying: hint-playground-0.1.0.0 (user goal)
+[__1] trying: hint-0.9.0.3 (dependency of hint-playground)
+[__2] trying: ghc-8.10.2 (dependency of hint)
+[__3] next goal: base (dependency of hint-playground)
+[__3] rejecting: base-4.13.0.0/installedbase (conflict: ghc => base<0 &&
+>=4.14 && <4.15)
+[__3] skipping: base-4.14.1.0, base-4.14.0.0, base-4.13.0.0, base-4.12.0.0,
+base-4.11.1.0, base-4.11.0.0, base-4.10.1.0, base-4.10.0.0, base-4.9.1.0,
+base-4.9.0.0, base-4.8.2.0, base-4.8.1.0, base-4.8.0.0, base-4.7.0.2,
+base-4.7.0.1, base-4.7.0.0, base-4.6.0.1, base-4.6.0.0, base-4.5.1.0,
+base-4.5.0.0, base-4.4.1.0, base-4.4.0.0, base-4.3.1.0, base-4.3.0.0,
+base-4.2.0.2, base-4.2.0.1, base-4.2.0.0, base-4.1.0.0, base-4.0.0.0,
+base-3.0.3.2, base-3.0.3.1 (has the same characteristics that caused the
+previous version to fail: excluded by constraint '<0 && >=4.14 && <4.15' from
+'ghc')
+[__3] fail (backjumping, conflict set: base, ghc, hint-playground)
+After searching the rest of the dependency tree exhaustively, these were the
+goals I've had most trouble fulfilling: base, ghc, hint-playground, hint
+
+ahc-cabal: callProcess: cabal "v2-build" (exit 1): failed
+----
+
+to me this indicates an impossible state: `<0 && >=4.14 && <4.15` is an unsatisfiable constraint.
+there are no GHC versions below 0.
